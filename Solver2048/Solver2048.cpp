@@ -219,20 +219,22 @@ namespace {
 	template<int SIZE>
 	double calcBoardScoreInternal(const Board<SIZE>& board) {
 		double res = 0;
-		res += static_cast<double>(board.mScore);
-		res += static_cast<double>(board.getMax()) * 4;
+		// res += static_cast<double>(board.mScore);
+		res += static_cast<double>(board.getMax());
 
+		if (board.getMax() == board.mGrid[0][0])
+			res += 1024;
+		
 		res += board.mGrid[0][0] * 40;
 		res += board.mGrid[0][1] * 29;
 		res += board.mGrid[0][2] * 27;
 		res += board.mGrid[0][3] * 25;
-
+		/*
 		res += board.mGrid[1][0] * 29;
 		res += board.mGrid[1][1] * 18;
 		res += board.mGrid[1][2] * 16;
 		res += board.mGrid[1][3] * 14;
 
-		/*
 		res += board.mGrid[2][0] * get_power<2, 7>::value;
 		res += board.mGrid[2][1] * get_power<2, 5>::value;
 		res += board.mGrid[2][2] * get_power<2, 3>::value;
