@@ -50,8 +50,8 @@ namespace {
 		void flip() {
 			for (auto y = 0; y < 4; y++)
 				for (auto x = 0; x < 2; x++) {
-					auto first = get(x, y);
-					auto second = get(3 - x, y);
+					const auto first = get(x, y);
+					const auto second = get(3 - x, y);
 					set(x, y, second);
 					set(3 - x, y, first);
 				}
