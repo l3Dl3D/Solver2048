@@ -124,10 +124,12 @@ namespace {
 		}
 
 		auto getMax() const {
-			int res = 0;
-			for (int y = 0; y < 4; y++)
-				for (int x = 0; x < 4; x++)
-					res = std::max(res, get(x, y));
+			unsigned long long res = 0;
+			auto grid = mGrid;
+			for (int i = 0; i < 16; i++) {
+				res = std::max(res, grid & 0xf);
+				grid >>= 4;
+			}
 			return res;
 		}
 
