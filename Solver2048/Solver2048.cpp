@@ -251,12 +251,8 @@ namespace {
 
 	double calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
 		Cache& cache, int numOfFour = 0) {
-		if (depth == 0) {
-			stats++;
-			return calcBoardScore(board);
-		}
-
 		auto p = std::make_pair(board, depth);
+
 		if (cache.count(p) == 1) {
 			auto cached = cache[p];
 			bestMoveOut = cached.second;
@@ -265,6 +261,13 @@ namespace {
 
 		double bestScore = 0;
 		int bestMove = -1;
+
+		if (depth == 0) {
+			// stats++;
+			bestScore = calcBoardScore(board);
+			cache[p] = std::make_pair(bestScore, bestMove);
+			return bestScore;
+		}
 
 		for (int dir = 0; dir < 4; dir++) {
 			Board boardCopy = board;
@@ -314,7 +317,7 @@ namespace {
 				Cache cache;
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
 				std::cout << mGM.getBoard();
-				std::cout << "Stats: " << stats << "\n";
+				// std::cout << "Stats: " << stats << "\n";
 				std::cout << "Move: " << bestMove << "\n\n";
 
 				mGM.move(bestMove);
