@@ -195,27 +195,35 @@ namespace {
 
 	double calcBoardScoreInternal(const Board& board) {
 		int res = 0;
-		// res += static_cast<double>(board.mScore);
+
 		auto max = board.getMax();
 		res += 1 << max;
 
 		if (max == board.get(0, 0))
 			res += 1024;
 
-		res += (1 << board.get(0, 0)) * 40;
-		res += (1 << board.get(1, 0)) * 29;
-		res += (1 << board.get(2, 0)) * 27;
-		res += (1 << board.get(3, 0)) * 25;
-		res += (1 << board.get(0, 1)) * 20;
-		res += (1 << board.get(1, 1)) * 9;
-		res += (1 << board.get(2, 1)) * 7;
-		res += (1 << board.get(3, 1)) * 5;
+		res += (1 << board.get(0, 0)) * 60;
+		res += (1 << board.get(1, 0)) * 49;
+		res += (1 << board.get(2, 0)) * 47;
+		res += (1 << board.get(3, 0)) * 45;
+		res += (1 << board.get(0, 1)) * 40;
+		res += (1 << board.get(1, 1)) * 29;
+		res += (1 << board.get(2, 1)) * 27;
+		res += (1 << board.get(3, 1)) * 25;
+		res += (1 << board.get(0, 2)) * 20;
+		res += (1 << board.get(1, 2)) * 9;
+		res += (1 << board.get(2, 2)) * 7;
+		res += (1 << board.get(3, 2)) * 5;
+		res += (1 << board.get(0, 3)) * 4;
+		res += (1 << board.get(1, 3)) * 3;
+		res += (1 << board.get(2, 3)) * 2;
+		res += (1 << board.get(3, 3)) * 1;
 
 		int smooth = 0;
 		int empty = 0;
 		
-		for (auto y = 0; y < 4; y++) {
-			for (auto x = 0; x < 4; x++) {
+		for (int y = 0; y < 4; y++) {
+			for (int x = 0; x < 4; x++) {
 				auto curr = board.get(x, y);
 				if (y > 0 && curr == board.get(x, y - 1)) smooth++;
 				if (x > 0 && curr == board.get(x - 1, y)) smooth++;
