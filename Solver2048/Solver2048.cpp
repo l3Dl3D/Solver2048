@@ -334,4 +334,6 @@ int main() {
 		Player player;
 		std::cout << player.startGame() << std::endl;
 	}
+
+	return 0;
 }
