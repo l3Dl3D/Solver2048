@@ -270,9 +270,9 @@ namespace {
 		int bestMove = -1;
 
 		if (depth == 0) {
-			// stats++;
 			bestScore = calcBoardScore(board);
-			cache[p] = std::make_pair(bestScore, bestMove);
+			cache.emplace(p, std::make_pair(bestScore, bestMove));
+			stats++;
 			return bestScore;
 		}
 
@@ -306,7 +306,8 @@ namespace {
 			bestMove = dist(gen);
 		}
 		bestMoveOut = bestMove;
-		cache[p] = std::make_pair(bestScore, bestMove);
+		cache.emplace(p, std::make_pair(bestScore, bestMove));
+		stats++;
 		return bestScore;
 	}
 
@@ -316,15 +317,17 @@ namespace {
 		GameManager mGM;
 
 		int startGame() {
+			int maxStats = 0;
 			while (mGM.movesAvailable()) {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
 				int depth = 3;
-				Cache cache;
+				Cache cache(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
+				maxStats = std::max(maxStats, stats);
 				std::cout << mGM.getBoard();
-				// std::cout << "Stats: " << stats << "\n";
+				std::cout << "Stats: " << maxStats << " " << stats << "\n";
 				std::cout << "Move: " << bestMove << "\n\n";
 
 				mGM.move(bestMove);
