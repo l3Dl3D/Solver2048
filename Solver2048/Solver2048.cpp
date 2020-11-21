@@ -210,7 +210,6 @@ namespace {
 		res += (1 << board.get(2, 1)) * 7;
 		res += (1 << board.get(3, 1)) * 5;
 
-		/*
 		int smooth = 0;
 		int empty = 0;
 		
@@ -224,7 +223,6 @@ namespace {
 		}
 
 		res += smooth * 8 + empty * 8;
-		*/
 
 		return static_cast<double>(res);
 	}
