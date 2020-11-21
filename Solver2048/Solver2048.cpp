@@ -38,13 +38,14 @@ namespace {
 		}
 
 		void transpose() {
-			for (auto y = 0; y < 4; y++)
-				for (auto x = 0; x < y; x++) {
-					auto first = get(x, y);
-					auto second = get(y, x);
-					set(x, y, second);
-					set(y, x, first);
-				}
+			mGrid =\
+				((mGrid & 0xf0000f0000f0000full) >> 0) |
+				((mGrid & 0x0f0000f0000f0000ull) >> 12) |
+				((mGrid & 0x00f0000f00000000ull) >> 24) |
+				((mGrid & 0x000f000000000000ull) >> 36) |
+				((mGrid & 0x0000f0000f0000f0ull) << 12) |
+				((mGrid & 0x00000000f0000f00ull) << 24) |
+				((mGrid & 0x000000000000f000ull) << 36);
 		}
 
 		void flip() {
