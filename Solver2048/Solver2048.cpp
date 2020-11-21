@@ -30,7 +30,7 @@ namespace {
 			for (auto y = 0; y < 4; y++) {
 				for (auto x = 0; x < 4; x++) {
 					auto curr = board.get(x, y);
-					os << (curr ? (1 << curr) : 0) << " ";
+					os << (curr ? (1 << curr) : 0) << "\t";
 				}
 				os << std::endl;
 			}
