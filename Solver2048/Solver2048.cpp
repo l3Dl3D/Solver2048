@@ -313,7 +313,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
-				int depth = 4;
+				int depth = 3;
 				Cache cache;
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
 				std::cout << mGM.getBoard();
