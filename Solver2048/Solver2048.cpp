@@ -48,13 +48,11 @@ namespace {
 		}
 
 		void flip() {
-			for (auto y = 0; y < 4; y++)
-				for (auto x = 0; x < 2; x++) {
-					const auto first = get(x, y);
-					const auto second = get(3 - x, y);
-					set(x, y, second);
-					set(3 - x, y, first);
-				}
+			mGrid = \
+				((mGrid & 0xf000f000f000f000ull) >> 12) |
+				((mGrid & 0x0f000f000f000f00ull) >> 4) |
+				((mGrid & 0x00f000f000f000f0ull) << 4) |
+				((mGrid & 0x000f000f000f000full) << 12);
 		}
 
 		void rotate() {
