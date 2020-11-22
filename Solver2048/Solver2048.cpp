@@ -318,13 +318,15 @@ namespace {
 
 		int startGame() {
 			int maxStats = 0;
+			Cache cache;
 			while (mGM.movesAvailable()) {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
 				int depth = 3;
-				Cache cache(maxStats);
+				cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
+				cache.clear();
 				maxStats = std::max(maxStats, stats);
 				std::cout << mGM.getBoard();
 				std::cout << "Stats: " << maxStats << " " << stats << "\n";
