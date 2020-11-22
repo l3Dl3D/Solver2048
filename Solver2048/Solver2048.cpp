@@ -135,6 +135,19 @@ namespace {
 		}
 
 		friend struct HashFunc;
+
+		bool movesAvailable() const {
+			for (auto i = 0; i < 4; i++)
+				for (auto j = 0; j < 4; j++) {
+					if (get(j, i) == 0)
+						return true;
+					if (i > 0 && get(j, i) == get(j, i - 1))
+						return true;
+					if (j > 0 && get(j, i) == get(j - 1, i))
+						return true;
+				}
+			return false;
+		}
 	};
 
 	class GameManager {
@@ -166,19 +179,6 @@ namespace {
 			bool put4 = dist4(mGen) == 0;
 			if (mBoard.get(cell.first, cell.second)) exit(-1);
 			mBoard.set(cell.first, cell.second, put4 ? 2 : 1);
-		}
-
-		bool movesAvailable() const {
-			for (auto i = 0; i < 4; i++)
-				for (auto j = 0; j < 4; j++) {
-					if (mBoard.get(j, i) == 0)
-						return true;
-					if (i > 0 && mBoard.get(j, i) == mBoard.get(j, i - 1))
-						return true;
-					if (j > 0 && mBoard.get(j, i) == mBoard.get(j - 1, i))
-						return true;
-				}
-			return false;
 		}
 
 		int move(int dir) {
@@ -244,6 +244,9 @@ namespace {
 
 	double calcBoardScore(const Board& board) {
 		double res = 0;
+		if (!board.movesAvailable())
+			return res;
+
 		auto boardCopy = board;
 		for (auto i = 0; i < 4; i++) {
 			boardCopy.transpose();
@@ -319,7 +322,7 @@ namespace {
 		int startGame() {
 			int maxStats = 0;
 			Cache cache;
-			while (mGM.movesAvailable()) {
+			while (mGM.getBoard().movesAvailable()) {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
