@@ -6,6 +6,7 @@
 #include <random>
 #include <chrono>
 #include <array>
+#include <immintrin.h>
 
 namespace {
 	class Board {
@@ -327,7 +328,8 @@ namespace {
 				auto board = mGM.getBoard();
 				int stats = 0;
 				int depth = 3;
-				cache.reserve(maxStats);
+				if(cache.bucket_count() < maxStats)
+					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
 				cache.clear();
 				maxStats = std::max(maxStats, stats);
