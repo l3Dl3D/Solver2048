@@ -194,8 +194,8 @@ namespace {
 		}
 	};
 
-	double calcBoardScoreInternal(const Board& board) {
-		int res = 0;
+	auto calcBoardScoreInternal(const Board& board) {
+		unsigned res = 0;
 
 		auto max = board.getMax();
 		res += 1 << max;
@@ -234,7 +234,7 @@ namespace {
 
 		res += smooth * 8 + empty * 8;
 
-		return static_cast<double>(res);
+		return res;
 	}
 
 	struct HashFunc {
@@ -243,8 +243,8 @@ namespace {
 		}
 	};
 
-	double calcBoardScore(const Board& board) {
-		double res = 0;
+	auto calcBoardScore(const Board& board) {
+		unsigned res = 0;
 		if (!board.movesAvailable())
 			return res;
 
@@ -258,10 +258,10 @@ namespace {
 		return res;
 	};
 
-	typedef std::unordered_map<std::pair<Board, int>, std::pair<double, int>, HashFunc> Cache;
+	typedef std::unordered_map<std::pair<Board, int>, std::pair<unsigned, int>, HashFunc> Cache;
 
-	double calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
-		Cache& cache, int numOfFour = 0) {
+	auto calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
+		Cache& cache) {
 		auto p = std::make_pair(board, depth);
 
 		if (cache.count(p) == 1) {
@@ -270,7 +270,7 @@ namespace {
 			return cached.first;
 		}
 
-		double bestScore = 0;
+		unsigned bestScore = 0;
 		int bestMove = -1;
 
 		if (depth == 0) {
@@ -286,17 +286,14 @@ namespace {
 				continue;
 
 			auto[emptyCells, emptyCellsSize] = boardCopy.getEmptyCells();
-			double currScore = 0;
+			unsigned currScore = 0;
 
 			for (auto cellIndex = 0; cellIndex < emptyCellsSize; cellIndex++) {
 				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 1);
-				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, numOfFour) / emptyCellsSize * 0.9;
-				if (numOfFour < 2) {
-					boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 2);
-					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, numOfFour + 1) / emptyCellsSize * 0.1;
-				}
+				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache);
 				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 0);
 			}
+			currScore /= emptyCellsSize;
 
 			if (currScore > bestScore) {
 				bestScore = currScore;
@@ -327,7 +324,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
-				int depth = 3;
+				int depth = 4;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
