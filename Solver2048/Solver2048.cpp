@@ -274,6 +274,16 @@ namespace {
 			size++;
 		}
 
+		if (size > 2) {
+			unsigned prevDiff = std::get<0>(res[0]) - std::get<0>(res[1]);
+			for (int i = 2; i < size; i++) {
+				if (prevDiff * 10 < std::get<0>(res[i - 1]) - std::get<0>(res[i])) {
+					size = i;
+					break;
+				}
+			}
+		}
+
 		return std::make_tuple(res, std::min(size, 3));
 	}
 
