@@ -112,6 +112,11 @@ namespace {
 			return this->mGrid == other.mGrid;
 		}
 
+		/*For sorting*/
+		bool operator<(const Board& other) const {
+			return this->mGrid < other.mGrid;
+		}
+
 		auto getEmptyCells() const {
 			char emptySize = 0;
 			std::array<std::pair<int, int>, 16> empty;
@@ -252,6 +257,26 @@ namespace {
 		return res;
 	};
 
+	auto getAllPossibleMoves(const Board& board) {
+		std::array<std::tuple<unsigned, Board, int>, 4> res;
+		int size = 0;
+		for (int dir = 0; dir < 4; dir++) {
+			Board currBoard = board;
+			if (currBoard.move(dir) == 0)
+				continue;
+			auto const score = calcBoardScore(currBoard);
+			auto const t = std::make_tuple(score, currBoard, dir);
+			auto scoreIt = std::lower_bound(res.begin(), res.begin() + size, t, [](auto a, auto b) {
+				return std::get<0>(b) < std::get<0>(a); // Put lower scores in the end.
+			});
+			std::copy_backward(scoreIt, res.begin() + size, res.begin() + size + 1);
+			*scoreIt = t;
+			size++;
+		}
+
+		return std::make_tuple(res, std::min(size, 3));
+	}
+
 	struct HashFunc {
 		size_t operator()(const std::pair<Board, int>& p) const {
 			return std::hash<uint64_t>()(p.first.mGrid) ^ std::hash<int>()(p.second);
@@ -280,10 +305,10 @@ namespace {
 			return bestScore;
 		}
 
-		for (int dir = 0; dir < 4; dir++) {
-			Board boardCopy = board;
-			if (boardCopy.move(dir) == 0)
-				continue;
+		auto[possibleMoves, numOfPossibleMoves] = getAllPossibleMoves(board);
+
+		for (int i = 0; i < numOfPossibleMoves; i++) {
+			auto[someScore, boardCopy, dir] = possibleMoves[i];
 
 			auto[emptyCells, emptyCellsSize] = boardCopy.getEmptyCells();
 			unsigned currScore = 0;
