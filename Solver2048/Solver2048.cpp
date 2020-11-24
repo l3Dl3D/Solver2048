@@ -237,12 +237,6 @@ namespace {
 		return res;
 	}
 
-	struct HashFunc {
-		size_t operator()(const std::pair<Board, int>& p) const {
-			return std::hash<uint64_t>()(p.first.mGrid) ^ std::hash<int>()(p.second);
-		}
-	};
-
 	auto calcBoardScore(const Board& board) {
 		unsigned res = 0;
 		if (!board.movesAvailable())
@@ -256,6 +250,12 @@ namespace {
 			res = std::max(res, calcBoardScoreInternal(boardCopy));
 		}
 		return res;
+	};
+
+	struct HashFunc {
+		size_t operator()(const std::pair<Board, int>& p) const {
+			return std::hash<uint64_t>()(p.first.mGrid) ^ std::hash<int>()(p.second);
+		}
 	};
 
 	typedef std::unordered_map<std::pair<Board, int>, std::pair<unsigned, int>, HashFunc> Cache;
