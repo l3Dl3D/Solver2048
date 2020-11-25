@@ -154,6 +154,16 @@ namespace {
 				}
 			return false;
 		}
+
+		auto countEmptyTiles() const {
+			auto grid = mGrid;
+			grid = \
+				((grid & 0x1111111111111111ull) >> 0) |
+				((grid & 0x2222222222222222ull) >> 1) |
+				((grid & 0x4444444444444444ull) >> 2) |
+				((grid & 0x8888888888888888ull) >> 3);
+			return 16 - _mm_popcnt_u64(grid);
+		}
 	};
 
 	class GameManager {
@@ -225,19 +235,8 @@ namespace {
 		res += (1 << board.get(2, 3)) * 2;
 		res += (1 << board.get(3, 3)) * 1;
 
-		int smooth = 0;
-		int empty = 0;
-		
-		for (int y = 0; y < 4; y++) {
-			for (int x = 0; x < 4; x++) {
-				auto curr = board.get(x, y);
-				if (y > 0 && curr == board.get(x, y - 1)) smooth++;
-				if (x > 0 && curr == board.get(x - 1, y)) smooth++;
-				if (curr == 0) empty++;
-			}
-		}
-
-		res += smooth * 8 + empty * 8;
+		int empty = board.countEmptyTiles();
+		res += empty * 32;
 
 		return res;
 	}
@@ -277,7 +276,7 @@ namespace {
 		if (size > 2) {
 			unsigned prevDiff = std::get<0>(res[0]) - std::get<0>(res[1]);
 			for (int i = 2; i < size; i++) {
-				if (prevDiff * 10 < std::get<0>(res[i - 1]) - std::get<0>(res[i])) {
+				if (prevDiff * 50 < std::get<0>(res[i - 1]) - std::get<0>(res[i])) {
 					size = i;
 					break;
 				}
@@ -359,7 +358,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0;
-				int depth = 4;
+				int depth = 5;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache);
