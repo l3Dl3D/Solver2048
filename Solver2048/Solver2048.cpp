@@ -222,10 +222,28 @@ namespace {
 		res += (1 << board.get(1, 0)) * 49;
 		res += (1 << board.get(2, 0)) * 47;
 		res += (1 << board.get(3, 0)) * 45;
-		res += (1 << board.get(0, 1)) * 40;
-		res += (1 << board.get(1, 1)) * 29;
-		res += (1 << board.get(2, 1)) * 27;
-		res += (1 << board.get(3, 1)) * 25;
+
+		if (
+			board.get(0, 0) > board.get(1, 0) &&
+			board.get(1, 0) > board.get(2, 0) &&
+			board.get(2, 0) > board.get(3, 0) &&
+			board.get(3, 0) > board.get(3, 1) &&
+			board.get(3, 0) > board.get(2, 1) &&
+			board.get(0, 0) > 3 &&
+			board.get(1, 0) > 3 &&
+			board.get(2, 0) > 3 &&
+			board.get(3, 0) > 3) {
+			res += (1 << board.get(3, 1)) * 40;
+			res += (1 << board.get(2, 1)) * 29;
+			res += (1 << board.get(1, 1)) * 27;
+			res += (1 << board.get(0, 1)) * 25;
+		}
+		else {
+			res += (1 << board.get(0, 1)) * 40;
+			res += (1 << board.get(1, 1)) * 29;
+			res += (1 << board.get(2, 1)) * 27;
+			res += (1 << board.get(3, 1)) * 25;
+		}
 		res += (1 << board.get(0, 2)) * 20;
 		res += (1 << board.get(1, 2)) * 9;
 		res += (1 << board.get(2, 2)) * 7;
