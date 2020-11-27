@@ -130,6 +130,30 @@ namespace {
 			return std::make_tuple(empty, emptySize);
 		}
 
+		auto getRelevantCells(bool isRow) const {
+			int relevantSize = 0;
+			std::array<std::pair<int, int>, 16> relevant;
+			auto board = *this;
+
+			if (!isRow)
+				board.transpose();
+
+			auto[emptyCells, emptySize] = board.getEmptyCells();
+			int nextY = -1, nextX = -1;
+			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptySize; it++) {
+				if (nextX != it->first) {
+					if (isRow)
+						relevant[relevantSize++] = *it;
+					else
+						relevant[relevantSize++] = std::make_pair(it->second, it->first);
+					nextX = it->first;
+				}
+				nextX++;
+			}
+
+			return std::make_pair(relevant, relevantSize);
+		}
+
 		auto getMax() const {
 			unsigned long long res = 0;
 			auto grid = mGrid;
@@ -231,11 +255,8 @@ namespace {
 		}
 	};
 
-	auto calcBoardScoreInternal(const Board& board) {
+	auto calcBoardScoreInternal(const Board& board, unsigned long long max) {
 		unsigned res = 0;
-
-		auto max = board.getMax();
-		res += 1 << max;
 
 		if (max == board.get(0, 0))
 			res += 1024;
@@ -265,18 +286,23 @@ namespace {
 		if (!board.movesAvailable())
 			return res;
 
+		auto max = board.getMax();
+		res += 1 << max;
+
 		auto boardCopy = board;
 		for (auto i = 0; i < 4; i++) {
 			boardCopy.transpose();
-			res = std::max(res, calcBoardScoreInternal(boardCopy));
+			res = std::max(res, calcBoardScoreInternal(boardCopy, max));
 			boardCopy.flip();
-			res = std::max(res, calcBoardScoreInternal(boardCopy));
+			res = std::max(res, calcBoardScoreInternal(boardCopy, max));
 		}
 
-		res += unsigned(board.calcVariance() * 8);
+		/*
+		res += unsigned(board.calcVariance());
 
 		int empty = board.countEmptyTiles();
-		res += empty * 128;
+		res += empty * 4;
+		*/
 
 		return res;
 	};
@@ -345,7 +371,7 @@ namespace {
 		for (int i = 0; i < numOfPossibleMoves; i++) {
 			auto[someScore, boardCopy, dir] = possibleMoves[i];
 
-			auto[emptyCells, emptyCellsSize] = boardCopy.getEmptyCells();
+			auto[emptyCells, emptyCellsSize] = boardCopy.getRelevantCells(i & 1);
 			unsigned currScore = 0;
 
 			for (auto cellIndex = 0; cellIndex < emptyCellsSize; cellIndex++) {
@@ -405,6 +431,17 @@ namespace {
 
 
 int main() {
+	/*
+	Board board;
+	board.set(1, 2, 5);
+	board.set(1, 0, 5);
+
+	std::cout << board << std::endl;
+	auto[relevant, relevantSize] = board.getRelevantCells(1);
+	for (auto it = relevant.cbegin(); it < relevant.cbegin() + relevantSize; it++)
+		std::cout << it->first << " " << it->second << std::endl;
+	return 0;
+	*/
 	for (int i = 0; i < 1; i++) {
 		Player player;
 		std::cout << player.startGame() << std::endl;
