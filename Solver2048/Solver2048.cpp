@@ -168,21 +168,13 @@ namespace {
 		auto calcVariance() const {
 			double res = 0;
 			double average = 0;
-			std::array<double, 32> table;
+			std::array<double, 16> table;
 			int tableSize = 0;
 			for(int x = 0; x < 4; x++)
 				for (int y = 0; y < 4; y++) {
-					auto curr = get(x, y);
-					if (x > 0) {
-						double temp = std::abs(get(x - 1, y) - curr);
-						table[tableSize++] = temp;
-						average += temp;
-					}
-					if (y > 0) {
-						double temp = std::abs(get(x, y - 1) - curr);
-						table[tableSize++] = temp;
-						average += temp;
-					}
+					const auto temp = get(x, y);
+					table[tableSize++] = temp;
+					average += temp;
 				}
 			average /= tableSize;
 			
@@ -191,6 +183,7 @@ namespace {
 				temp *= temp;
 				res += temp;
 			}
+			res /= tableSize;
 			return res;
 		}
 	};
@@ -399,6 +392,7 @@ namespace {
 				maxStats = std::max(maxStats, stats);
 				std::cout << mGM.getBoard();
 				std::cout << "Stats: " << maxStats << " (%" << (double(cacheHits) * 100 / (cacheHits + stats)) << ")\n";
+				std::cout << "Variance: " << mGM.getBoard().calcVariance() << "\n";
 				std::cout << "Move: " << bestMove << "\n\n";
 
 				mGM.move(bestMove);
