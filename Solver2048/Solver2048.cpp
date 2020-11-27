@@ -162,7 +162,36 @@ namespace {
 				((grid & 0x2222222222222222ull) >> 1) |
 				((grid & 0x4444444444444444ull) >> 2) |
 				((grid & 0x8888888888888888ull) >> 3);
-			return 16 - _mm_popcnt_u64(grid);
+			return int(16 - _mm_popcnt_u64(grid));
+		}
+
+		auto calcVariance() const {
+			double res = 0;
+			double average = 0;
+			std::array<double, 32> table;
+			int tableSize = 0;
+			for(int x = 0; x < 4; x++)
+				for (int y = 0; y < 4; y++) {
+					auto curr = get(x, y);
+					if (x > 0) {
+						double temp = std::abs(get(x - 1, y) - curr);
+						table[tableSize++] = temp;
+						average += temp;
+					}
+					if (y > 0) {
+						double temp = std::abs(get(x, y - 1) - curr);
+						table[tableSize++] = temp;
+						average += temp;
+					}
+				}
+			average /= tableSize;
+			
+			for (auto it = table.begin(); it < table.begin() + tableSize; it++) {
+				auto temp = (*it - average);
+				temp *= temp;
+				res += temp;
+			}
+			return res;
 		}
 	};
 
@@ -222,28 +251,10 @@ namespace {
 		res += (1 << board.get(1, 0)) * 49;
 		res += (1 << board.get(2, 0)) * 47;
 		res += (1 << board.get(3, 0)) * 45;
-
-		if (
-			board.get(0, 0) > board.get(1, 0) &&
-			board.get(1, 0) > board.get(2, 0) &&
-			board.get(2, 0) > board.get(3, 0) &&
-			board.get(3, 0) > board.get(3, 1) &&
-			board.get(3, 0) > board.get(2, 1) &&
-			board.get(0, 0) > 3 &&
-			board.get(1, 0) > 3 &&
-			board.get(2, 0) > 3 &&
-			board.get(3, 0) > 3) {
-			res += (1 << board.get(3, 1)) * 40;
-			res += (1 << board.get(2, 1)) * 29;
-			res += (1 << board.get(1, 1)) * 27;
-			res += (1 << board.get(0, 1)) * 25;
-		}
-		else {
-			res += (1 << board.get(0, 1)) * 40;
-			res += (1 << board.get(1, 1)) * 29;
-			res += (1 << board.get(2, 1)) * 27;
-			res += (1 << board.get(3, 1)) * 25;
-		}
+		res += (1 << board.get(0, 1)) * 40;
+		res += (1 << board.get(1, 1)) * 29;
+		res += (1 << board.get(2, 1)) * 27;
+		res += (1 << board.get(3, 1)) * 25;
 		res += (1 << board.get(0, 2)) * 20;
 		res += (1 << board.get(1, 2)) * 9;
 		res += (1 << board.get(2, 2)) * 7;
@@ -252,9 +263,6 @@ namespace {
 		res += (1 << board.get(1, 3)) * 3;
 		res += (1 << board.get(2, 3)) * 2;
 		res += (1 << board.get(3, 3)) * 1;
-
-		int empty = board.countEmptyTiles();
-		res += empty * 32;
 
 		return res;
 	}
@@ -271,6 +279,12 @@ namespace {
 			boardCopy.flip();
 			res = std::max(res, calcBoardScoreInternal(boardCopy));
 		}
+
+		res += unsigned(board.calcVariance() * 8);
+
+		int empty = board.countEmptyTiles();
+		res += empty * 128;
+
 		return res;
 	};
 
@@ -313,12 +327,13 @@ namespace {
 	typedef std::unordered_map<std::pair<Board, int>, std::pair<unsigned, int>, HashFunc> Cache;
 
 	auto calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
-		Cache& cache) {
+		Cache& cache, int& cacheHits) {
 		auto p = std::make_pair(board, depth);
 
 		if (cache.count(p) == 1) {
 			auto cached = cache[p];
 			bestMoveOut = cached.second;
+			cacheHits++;
 			return cached.first;
 		}
 
@@ -342,7 +357,7 @@ namespace {
 
 			for (auto cellIndex = 0; cellIndex < emptyCellsSize; cellIndex++) {
 				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 1);
-				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache);
+				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits);
 				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 0);
 			}
 			currScore /= emptyCellsSize;
@@ -375,15 +390,15 @@ namespace {
 			while (mGM.getBoard().movesAvailable()) {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
-				int stats = 0;
+				int stats = 0, cacheHits = 0;
 				int depth = 5;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
-				double currScore = calcScore(board, depth, bestMove, stats, cache);
+				double currScore = calcScore(board, depth, bestMove, stats, cache, cacheHits);
 				cache.clear();
 				maxStats = std::max(maxStats, stats);
 				std::cout << mGM.getBoard();
-				std::cout << "Stats: " << maxStats << " " << stats << "\n";
+				std::cout << "Stats: " << maxStats << " (%" << (double(cacheHits) * 100 / (cacheHits + stats)) << ")\n";
 				std::cout << "Move: " << bestMove << "\n\n";
 
 				mGM.move(bestMove);
