@@ -256,7 +256,7 @@ namespace {
 	};
 
 	auto calcBoardScoreInternal(const Board& board, unsigned long long max) {
-		unsigned res = 0;
+		double res = 0;
 
 		if (max == board.get(0, 0))
 			res += 1024;
@@ -282,7 +282,7 @@ namespace {
 	}
 
 	auto calcBoardScore(const Board& board) {
-		unsigned res = 0;
+		double res = 0;
 		if (!board.movesAvailable())
 			return res;
 
@@ -290,25 +290,25 @@ namespace {
 		res += 1 << max;
 
 		auto boardCopy = board;
+		decltype(res) resMax = 0;
 		for (auto i = 0; i < 4; i++) {
 			boardCopy.transpose();
-			res = std::max(res, calcBoardScoreInternal(boardCopy, max));
+			resMax = std::max(resMax, calcBoardScoreInternal(boardCopy, max));
 			boardCopy.flip();
-			res = std::max(res, calcBoardScoreInternal(boardCopy, max));
+			resMax = std::max(resMax, calcBoardScoreInternal(boardCopy, max));
 		}
+		res += resMax;
 
-		/*
-		res += unsigned(board.calcVariance());
+		res += board.calcVariance() * 2;
 
 		int empty = board.countEmptyTiles();
-		res += empty * 4;
-		*/
+		res += empty * 2;
 
 		return res;
 	};
 
 	auto getAllPossibleMoves(const Board& board) {
-		std::array<std::tuple<unsigned, Board, int>, 4> res;
+		std::array<std::tuple<double, Board, int>, 4> res;
 		int size = 0;
 		for (int dir = 0; dir < 4; dir++) {
 			Board currBoard = board;
@@ -325,7 +325,7 @@ namespace {
 		}
 
 		if (size > 2) {
-			unsigned prevDiff = std::get<0>(res[0]) - std::get<0>(res[1]);
+			double prevDiff = std::get<0>(res[0]) - std::get<0>(res[1]);
 			for (int i = 2; i < size; i++) {
 				if (prevDiff * 50 < std::get<0>(res[i - 1]) - std::get<0>(res[i])) {
 					size = i;
@@ -343,10 +343,11 @@ namespace {
 		}
 	};
 
-	typedef std::unordered_map<std::pair<Board, int>, std::pair<unsigned, int>, HashFunc> Cache;
+	typedef std::unordered_map<std::pair<Board, int>, std::pair<double, int>, HashFunc> Cache;
 
 	auto calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
-		Cache& cache, int& cacheHits) {
+		Cache& cache, int& cacheHits, int numOfFours = 0)
+	{
 		auto p = std::make_pair(board, depth);
 
 		if (cache.count(p) == 1) {
@@ -356,7 +357,7 @@ namespace {
 			return cached.first;
 		}
 
-		unsigned bestScore = 0;
+		double bestScore = 0;
 		int bestMove = -1;
 
 		if (depth == 0) {
@@ -372,12 +373,12 @@ namespace {
 			auto[someScore, boardCopy, dir] = possibleMoves[i];
 
 			auto[emptyCells, emptyCellsSize] = boardCopy.getRelevantCells(i & 1);
-			unsigned currScore = 0;
+			double currScore = 0;
 
-			for (auto cellIndex = 0; cellIndex < emptyCellsSize; cellIndex++) {
-				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 1);
-				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits);
-				boardCopy.set(emptyCells[cellIndex].first, emptyCells[cellIndex].second, 0);
+			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
+				boardCopy.set(it->first, it->second, 1);
+				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours);
+				boardCopy.set(it->first, it->second, 0);
 			}
 			currScore /= emptyCellsSize;
 
@@ -387,11 +388,13 @@ namespace {
 			}
 		}
 
+		// No moves - choose random move
 		if (bestMove == -1) {
 			std::mt19937 gen((unsigned)std::chrono::system_clock::now().time_since_epoch().count());
 			std::uniform_int_distribution<int> dist(0, 3);
 			bestMove = dist(gen);
 		}
+
 		bestMoveOut = bestMove;
 		cache.emplace(p, std::make_pair(bestScore, bestMove));
 		stats++;
@@ -410,7 +413,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0, cacheHits = 0;
-				int depth = 5;
+				int depth = 6;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache, cacheHits);
