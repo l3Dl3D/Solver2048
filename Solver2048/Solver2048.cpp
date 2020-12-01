@@ -283,6 +283,7 @@ namespace {
 
 	auto calcBoardScore(const Board& board) {
 		double res = 0;
+
 		if (!board.movesAvailable())
 			return res;
 
@@ -299,7 +300,7 @@ namespace {
 		}
 		res += resMax;
 
-		res += board.calcVariance() * 2;
+		// res += board.calcVariance() * 2;
 
 		int empty = board.countEmptyTiles();
 		res += empty * 2;
@@ -373,12 +374,22 @@ namespace {
 			auto[someScore, boardCopy, dir] = possibleMoves[i];
 
 			auto[emptyCells, emptyCellsSize] = boardCopy.getRelevantCells(i & 1);
+			auto numOfEmptyCells = boardCopy.countEmptyTiles();
 			double currScore = 0;
 
 			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
-				boardCopy.set(it->first, it->second, 1);
-				currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours);
-				boardCopy.set(it->first, it->second, 0);
+				if (numOfEmptyCells > 3) {
+					boardCopy.set(it->first, it->second, 1);
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours);
+					boardCopy.set(it->first, it->second, 0);
+				}
+				else {
+					boardCopy.set(it->first, it->second, 1);
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours) * 0.9;
+					boardCopy.set(it->first, it->second, 2);
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours) * 0.1;
+					boardCopy.set(it->first, it->second, 0);
+				}
 			}
 			currScore /= emptyCellsSize;
 
