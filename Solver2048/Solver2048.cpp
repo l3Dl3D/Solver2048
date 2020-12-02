@@ -261,10 +261,10 @@ namespace {
 		if (max == board.get(0, 0))
 			res += 1024;
 
-		res += (1 << board.get(0, 0)) * 60;
-		res += (1 << board.get(1, 0)) * 49;
-		res += (1 << board.get(2, 0)) * 47;
-		res += (1 << board.get(3, 0)) * 45;
+		res += (1 << board.get(0, 0)) * 70;
+		res += (1 << board.get(1, 0)) * 59;
+		res += (1 << board.get(2, 0)) * 57;
+		res += (1 << board.get(3, 0)) * 55;
 		res += (1 << board.get(0, 1)) * 40;
 		res += (1 << board.get(1, 1)) * 29;
 		res += (1 << board.get(2, 1)) * 27;
@@ -288,7 +288,7 @@ namespace {
 			return res;
 
 		auto max = board.getMax();
-		res += 1 << max;
+		res += (1 << max) * 2;
 
 		auto boardCopy = board;
 		decltype(res) resMax = 0;
@@ -347,7 +347,7 @@ namespace {
 	typedef std::unordered_map<std::pair<Board, int>, std::pair<double, int>, HashFunc> Cache;
 
 	auto calcScore(const Board& board, int depth, int& bestMoveOut, int& stats,
-		Cache& cache, int& cacheHits, int numOfFours = 0)
+		Cache& cache, int& cacheHits)
 	{
 		auto p = std::make_pair(board, depth);
 
@@ -380,14 +380,14 @@ namespace {
 			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
 				if (numOfEmptyCells > 3) {
 					boardCopy.set(it->first, it->second, 1);
-					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours);
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits);
 					boardCopy.set(it->first, it->second, 0);
 				}
 				else {
 					boardCopy.set(it->first, it->second, 1);
-					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours) * 0.9;
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits) * 0.9;
 					boardCopy.set(it->first, it->second, 2);
-					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits, numOfFours) * 0.1;
+					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits) * 0.1;
 					boardCopy.set(it->first, it->second, 0);
 				}
 			}
@@ -414,7 +414,6 @@ namespace {
 
 	class Player {
 	public:
-		static const int SIZE = 4;
 		GameManager mGM;
 
 		int startGame() {
@@ -424,7 +423,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0, cacheHits = 0;
-				int depth = 6;
+				int depth = 7;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache, cacheHits);
