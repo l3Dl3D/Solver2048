@@ -210,6 +210,10 @@ namespace {
 			res /= tableSize;
 			return res;
 		}
+
+		auto getGrid() const {
+			return mGrid;
+		}
 	};
 
 	class GameManager {
@@ -255,28 +259,26 @@ namespace {
 		}
 	};
 
-	auto calcBoardScoreInternal(const Board& board, unsigned long long max) {
+	auto calcBoardScoreInternal(const Board& board, const unsigned long long max) {
 		double res = 0;
 
 		if (max == board.get(0, 0))
 			res += 1024;
 
-		res += (1 << board.get(0, 0)) * 70;
-		res += (1 << board.get(1, 0)) * 59;
-		res += (1 << board.get(2, 0)) * 57;
-		res += (1 << board.get(3, 0)) * 55;
-		res += (1 << board.get(0, 1)) * 40;
-		res += (1 << board.get(1, 1)) * 29;
-		res += (1 << board.get(2, 1)) * 27;
-		res += (1 << board.get(3, 1)) * 25;
-		res += (1 << board.get(0, 2)) * 20;
-		res += (1 << board.get(1, 2)) * 9;
-		res += (1 << board.get(2, 2)) * 7;
-		res += (1 << board.get(3, 2)) * 5;
-		res += (1 << board.get(0, 3)) * 4;
-		res += (1 << board.get(1, 3)) * 3;
-		res += (1 << board.get(2, 3)) * 2;
-		res += (1 << board.get(3, 3)) * 1;
+		auto grid = board.getGrid();
+		static const unsigned weights[4][4] = {
+		{ 70, 59, 57, 55 },
+		{ 40, 29, 27, 25 },
+		{ 20, 9, 7, 5 },
+		{ 4, 3, 2, 1 }
+		};
+
+		for(int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++) {
+				unsigned r = grid & 0xf;
+				grid >>= 4;
+				res += (1 << r) * weights[i][j];
+			}
 
 		return res;
 	}
