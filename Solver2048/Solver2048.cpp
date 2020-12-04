@@ -378,7 +378,7 @@ namespace {
 			double currScore = 0;
 
 			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
-				if (numOfEmptyCells > 3) {
+				if (numOfEmptyCells > 4) {
 					boardCopy.set(it->first, it->second, 1);
 					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits);
 					boardCopy.set(it->first, it->second, 0);
@@ -423,7 +423,7 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0, cacheHits = 0;
-				int depth = 7;
+				int depth = 6;
 				if(cache.bucket_count() < maxStats)
 					cache.reserve(maxStats);
 				double currScore = calcScore(board, depth, bestMove, stats, cache, cacheHits);
