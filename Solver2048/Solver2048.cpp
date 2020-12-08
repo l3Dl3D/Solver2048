@@ -308,7 +308,7 @@ namespace {
 		res += empty * 2;
 
 		return res;
-	};
+	}
 
 	auto getAllPossibleMoves(const Board& board) {
 		std::array<std::tuple<double, Board, int>, 4> res;
