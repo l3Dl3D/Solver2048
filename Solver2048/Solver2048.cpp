@@ -16,12 +16,12 @@ namespace {
 	public:
 		Board() : mGrid(0) {}
 
-		int get(int x, int y) const {
+		uint64_t get(unsigned x, unsigned y) const {
 			const int offset = x * 4 + y * 16;
 			return ((mGrid & (15ull << offset)) >> offset) & 15;
 		}
 
-		void set(int x, int y, uint64_t value) {
+		void set(unsigned x, unsigned y, uint64_t value) {
 			const int offset = x * 4 + y * 16;
 			const uint64_t mask = 15ull << offset;
 			mGrid = ((~mask) & mGrid) | (value << offset);
@@ -118,11 +118,11 @@ namespace {
 		}
 
 		auto getEmptyCells() const {
-			char emptySize = 0;
+			unsigned emptySize = 0;
 			std::array<std::pair<int, int>, 16> empty;
 
-			for (char y = 0; y < 4; y++)
-				for (char x = 0; x < 4; x++)
+			for (unsigned y = 0; y < 4; y++)
+				for (unsigned x = 0; x < 4; x++)
 					if (get(x, y) == 0) {
 						empty[emptySize++] = std::make_pair(x, y);
 					}
