@@ -446,17 +446,6 @@ namespace {
 
 
 int main() {
-	/*
-	Board board;
-	board.set(1, 2, 5);
-	board.set(1, 0, 5);
-
-	std::cout << board << std::endl;
-	auto[relevant, relevantSize] = board.getRelevantCells(1);
-	for (auto it = relevant.cbegin(); it < relevant.cbegin() + relevantSize; it++)
-		std::cout << it->first << " " << it->second << std::endl;
-	return 0;
-	*/
 	for (int i = 0; i < 1; i++) {
 		Player player;
 		std::cout << player.startGame() << std::endl;
