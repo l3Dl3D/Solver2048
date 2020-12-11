@@ -5,10 +5,20 @@
 #include <unordered_map>
 #include <random>
 #include <chrono>
+#include <numeric>
 #include <array>
 #include <immintrin.h>
 
 namespace {
+	template <typename T>
+	auto standard_deviation(T first, T last) {
+		const double n = double(std::distance(first, last));
+		const double average = std::accumulate(first, last, 0.0) / n;
+		return std::sqrt(std::accumulate(first, last, 0.0, [](const double a, const double b) {
+			return a + b * b;
+		}) / n - average * average);
+	}
+
 	class Board {
 	private:
 		uint64_t mGrid;
@@ -18,7 +28,7 @@ namespace {
 
 		uint64_t get(unsigned x, unsigned y) const {
 			const int offset = x * 4 + y * 16;
-			return ((mGrid & (15ull << offset)) >> offset) & 15;
+			return ((mGrid & (15ull << offset)) >> offset) & 15ull;
 		}
 
 		void set(unsigned x, unsigned y, uint64_t value) {
@@ -179,36 +189,54 @@ namespace {
 			return false;
 		}
 
-		auto countEmptyTiles() const {
+		uint64_t getEmptyCellsBits() const {
 			auto grid = mGrid;
 			grid = \
 				((grid & 0x1111111111111111ull) >> 0) |
 				((grid & 0x2222222222222222ull) >> 1) |
 				((grid & 0x4444444444444444ull) >> 2) |
 				((grid & 0x8888888888888888ull) >> 3);
-			return int(16 - _mm_popcnt_u64(grid));
+			return grid;
 		}
 
-		auto calcVariance() const {
-			double res = 0;
-			double average = 0;
-			std::array<double, 16> table;
-			int tableSize = 0;
-			for(int x = 0; x < 4; x++)
-				for (int y = 0; y < 4; y++) {
-					const auto temp = get(x, y);
-					table[tableSize++] = temp;
-					average += temp;
+		auto countEmptyCells() const {
+			return int(16 - _mm_popcnt_u64(getEmptyCellsBits()));
+		}
+
+		template<typename T>
+		size_t getDeltasInRows(T arr) const {
+			size_t size = 0;
+			auto bits = getEmptyCellsBits() * 0xfull;
+			auto grid = mGrid;
+
+			for (int i = 0; i < 4; i++) {
+				const auto row = uint16_t(grid);
+				const auto mask = uint16_t(bits);
+				auto relevant = _pext_u64(row, mask);
+				while (relevant & 0xf0) { // while next tile is relevant
+					arr[size++] = std::abs((1 << (relevant & 0xf)) - (1 << ((relevant >> 4) & 0xf)));
+					relevant >>= 4;
 				}
-			average /= tableSize;
-			
-			for (auto it = table.begin(); it < table.begin() + tableSize; it++) {
-				auto temp = (*it - average);
-				temp *= temp;
-				res += temp;
+
+				grid >>= 16;
+				bits >>= 16;
 			}
-			res /= tableSize;
-			return res;
+
+			return size;
+		}
+
+		auto getDeltas() const {
+			auto boardCopy = *this;
+			std::array<unsigned, 24> arr;
+			auto size = boardCopy.getDeltasInRows(arr.begin());
+			boardCopy.transpose();
+			size += boardCopy.getDeltasInRows(arr.begin() + size);
+			return std::make_pair(arr, size);
+		}
+
+		auto calcDeltasStandardDeviation() const {
+			auto[arr, size] = getDeltas();
+			return standard_deviation(arr.begin(), arr.begin() + size);
 		}
 
 		auto getGrid() const {
@@ -302,9 +330,9 @@ namespace {
 		}
 		res += resMax;
 
-		// res += board.calcVariance() * 2;
+		// res -= 2 * board.calcDeltasStandardDeviation();
 
-		int empty = board.countEmptyTiles();
+		int empty = board.countEmptyCells();
 		res += empty * 2;
 
 		return res;
@@ -376,7 +404,7 @@ namespace {
 			auto[someScore, boardCopy, dir] = possibleMoves[i];
 
 			auto[emptyCells, emptyCellsSize] = boardCopy.getRelevantCells(i & 1);
-			auto numOfEmptyCells = boardCopy.countEmptyTiles();
+			auto numOfEmptyCells = boardCopy.countEmptyCells();
 			double currScore = 0;
 
 			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
@@ -433,8 +461,9 @@ namespace {
 				maxStats = std::max(maxStats, stats);
 				std::cout << mGM.getBoard();
 				std::cout << "Stats: " << maxStats << " (%" << (double(cacheHits) * 100 / (cacheHits + stats)) << ")\n";
-				std::cout << "Variance: " << mGM.getBoard().calcVariance() << "\n";
-				std::cout << "Move: " << bestMove << "\n\n";
+				std::cout << "Move: " << bestMove << "\n";
+				std::cout << "Standard deviation: " << board.calcDeltasStandardDeviation() << "\n";
+				std::cout << "\n";
 
 				mGM.move(bestMove);
 			}
