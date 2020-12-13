@@ -511,7 +511,6 @@ namespace {
 
 				auto[moves, movesSize] = getAllPossibleMoves(mGM.getBoard());
 				if (movesSize == 1) {
-					char buf[4];
 					std::cout << "Only one move available!\n";
 					bestMove = std::get<2>(moves[0]);
 				}
