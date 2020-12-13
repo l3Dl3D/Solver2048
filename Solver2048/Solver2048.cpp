@@ -296,9 +296,11 @@ namespace {
 		auto grid = board.getGrid();
 		static const unsigned weights[4][4] = {
 		{ 70, 59, 57, 55 },
-		{ 40, 29, 27, 25 },
+		// { 40, 29, 27, 25 },
+		{ 25, 27, 29, 40 },
 		{ 20, 9, 7, 5 },
-		{ 4, 3, 2, 1 }
+		// { 4, 3, 2, 1 }
+		{ 1, 2, 3, 4 }
 		};
 
 		for(int i = 0; i < 4; i++)
