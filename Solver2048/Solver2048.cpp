@@ -410,7 +410,7 @@ namespace {
 			double currScore = 0;
 
 			for (auto it = emptyCells.cbegin(); it != emptyCells.cbegin() + emptyCellsSize; it++) {
-				if (numOfEmptyCells > 4) {
+				if (numOfEmptyCells > 5) {
 					boardCopy.set(it->first, it->second, 1);
 					currScore += calcScore(boardCopy, depth - 1, bestMoveOut, stats, cache, cacheHits);
 					boardCopy.set(it->first, it->second, 0);
