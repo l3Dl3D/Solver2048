@@ -453,18 +453,27 @@ namespace {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
 				int stats = 0, cacheHits = 0;
-				int depth = 6;
-				if(cache.bucket_count() < maxStats)
-					cache.reserve(maxStats);
-				double currScore = calcScore(board, depth, bestMove, stats, cache, cacheHits);
-				cache.clear();
-				maxStats = std::max(maxStats, stats);
+				int depth = 5;
+
+				auto[moves, movesSize] = getAllPossibleMoves(mGM.getBoard());
+				if (movesSize == 1) {
+					char buf[4];
+					std::cout << "Only one move available!\n";
+					bestMove = std::get<2>(moves[0]);
+				}
+				else {
+					if (cache.bucket_count() < maxStats)
+						cache.reserve(maxStats);
+					calcScore(board, depth, bestMove, stats, cache, cacheHits);
+					cache.clear();
+					maxStats = std::max(maxStats, stats);
+				}
+
 				std::cout << mGM.getBoard();
 				std::cout << "Stats: " << maxStats << " (%" << (double(cacheHits) * 100 / (cacheHits + stats)) << ")\n";
 				std::cout << "Move: " << bestMove << "\n";
 				std::cout << "Standard deviation: " << board.calcDeltasStandardDeviation() << "\n";
 				std::cout << "\n";
-
 				mGM.move(bestMove);
 			}
 
