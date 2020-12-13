@@ -234,9 +234,56 @@ namespace {
 			return std::make_pair(arr, size);
 		}
 
+		auto getDeltasAverage() const {
+			auto[arr, size] = getDeltas();
+			return std::accumulate(arr.begin(), arr.begin() + size, 0.0) / size;
+		}
+
+		auto getAllFilledCells() const {
+			std::array<unsigned, 16> arr;
+			size_t size = 0;
+			uint64_t bits = getEmptyCellsBits() * 0xfull;
+			uint64_t relevant = _pext_u64(mGrid, bits);
+			while (relevant) {
+				arr[size++] = 1 << (relevant & 0xf);
+				relevant >>= 4;
+			}
+
+			return std::make_pair(arr, size);
+		}
+
+		auto getNonMaxAverage() const {
+			auto grid = mGrid;
+			double res = 0;
+			unsigned n = 0;
+			auto max = getMax();
+			while (grid) {
+				auto curr = grid & 0xfull;
+				res += 1 << curr;
+				n++;
+				grid >>= 4;
+			}
+			res -= 1 << max;
+			n--;
+			return res / n;
+		}
+
+		auto sumSquares() const {
+			double res = 0;
+			uint64_t grid = mGrid;
+			while (grid) {
+				const auto curr = 1 << (grid & 0xfull);
+				res += curr * curr;
+				grid >>= 4;
+			}
+			return std::sqrt(res) / 4;
+		}
+
 		auto calcDeltasStandardDeviation() const {
 			auto[arr, size] = getDeltas();
-			return standard_deviation(arr.begin(), arr.begin() + size);
+			// auto[arr, size] = getAllFilledCells();
+			auto newEnd = std::remove(arr.begin(), arr.begin() + size, 1 << getMax());
+			return standard_deviation(arr.begin(), newEnd);
 		}
 
 		auto getGrid() const {
@@ -309,7 +356,7 @@ namespace {
 				grid >>= 4;
 				res += (1 << r) * weights[i][j];
 			}
-
+		
 		return res;
 	}
 
@@ -332,7 +379,10 @@ namespace {
 		}
 		res += resMax;
 
-		// res -= 2 * board.calcDeltasStandardDeviation();
+		// res -= 4 * board.calcDeltasStandardDeviation();
+		res -= board.getNonMaxAverage();
+		// res -= board.getDeltasAverage();
+		res += 2 * board.sumSquares();
 
 		int empty = board.countEmptyCells();
 		res += empty * 2;
@@ -357,6 +407,7 @@ namespace {
 			size++;
 		}
 
+		/*
 		if (size > 2) {
 			double prevDiff = std::get<0>(res[0]) - std::get<0>(res[1]);
 			for (int i = 2; i < size; i++) {
@@ -366,6 +417,7 @@ namespace {
 				}
 			}
 		}
+		*/
 
 		return std::make_tuple(res, std::min(size, 3));
 	}
