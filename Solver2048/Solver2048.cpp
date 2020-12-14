@@ -382,10 +382,8 @@ namespace {
 		// res -= 4 * board.calcDeltasStandardDeviation();
 		res -= board.getNonMaxAverage();
 		// res -= board.getDeltasAverage();
-		res += 2 * board.sumSquares();
-
-		int empty = board.countEmptyCells();
-		res += empty * 2;
+		res += board.sumSquares();
+		res += 2 * board.countEmptyCells();
 
 		return res;
 	}
