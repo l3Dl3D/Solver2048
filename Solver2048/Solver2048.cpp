@@ -501,8 +501,8 @@ namespace {
 		GameManager mGM;
 
 		int startGame() {
-			int maxStats = 0;
-			Cache cache;
+			int maxStats = 1 << 20;
+			Cache cache(maxStats);
 			while (mGM.getBoard().movesAvailable()) {
 				int bestMove = -1;
 				auto board = mGM.getBoard();
