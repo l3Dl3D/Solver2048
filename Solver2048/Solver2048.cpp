@@ -286,6 +286,35 @@ namespace {
 			return standard_deviation(arr.begin(), newEnd);
 		}
 
+		auto calcSmoothnessInRows() const {
+			unsigned res = 0;
+			auto grid = mGrid;
+			auto bits = getEmptyCellsBits() * 0xfull;
+			for (int i = 0; i < 4; i++) {
+				auto row = uint16_t(grid);
+				auto relevant = _pext_u64(row, bits);
+				while (relevant) {
+					auto pair = uint8_t(relevant);
+					if (pair % 0x11 == 0) {
+						res += 1 << (pair / 0x11);
+					}
+					relevant >>= 4;
+				}
+				grid >>= 16;
+				bits >>= 16;
+			}
+
+			return res;
+		}
+
+		auto calcSmoothness() const {
+			auto boardCopy = *this;
+			auto res = boardCopy.calcSmoothnessInRows();
+			boardCopy.transpose();
+			res += boardCopy.calcSmoothnessInRows();
+			return res;
+		}
+
 		auto getGrid() const {
 			return mGrid;
 		}
@@ -384,6 +413,7 @@ namespace {
 		// res -= board.getDeltasAverage();
 		res += board.sumSquares();
 		res += 2 * board.countEmptyCells();
+		res += board.calcSmoothness();
 
 		return res;
 	}
